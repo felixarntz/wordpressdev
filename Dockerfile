@@ -55,6 +55,8 @@ RUN { \
 		echo 'opcache.enable_cli=1'; \
 	} > /usr/local/etc/php/conf.d/opcache-recommended.ini
 
+ENV WP_DOMAIN wp.test
+
 VOLUME /var/www/html
 
 RUN set -ex; \

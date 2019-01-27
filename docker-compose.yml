@@ -10,8 +10,7 @@ services:
       - ./config/wordpress:/etc/wordpress
       - ./config/nginx:/etc/nginx/conf.d
       - ./public:/var/www/html
-      - ./config/certs:/etc/letsencrypt
-      - ./certs-data:/data/letsencrypt
+      - ./config/ssl/certs:/etc/ssl
     env_file:
       - config/.env
       - .env
@@ -22,7 +21,7 @@ services:
     image: mariadb
     container_name: mysql
     volumes:
-      - ./mysql:/var/lib/mysql
+      - ./config/mysql/data:/var/lib/mysql
     environment:
       - MYSQL_ROOT_PASSWORD=wordpress
 

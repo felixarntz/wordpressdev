@@ -6,6 +6,43 @@ echo "127.0.0.1  $WP_DOMAIN" >> /etc/hosts
 
 current_dir=$PWD
 
+# Create database if it does not exist yet
+TERM=dumb php -- <<'EOPHP'
+<?php
+$stderr = fopen('php://stderr', 'w');
+$host = 'mysql';
+$user = 'root';
+$pass = 'wordpress';
+$dbName = 'wordpress';
+$maxTries = 10;
+do {
+	$mysql = new mysqli($host, $user, $pass, '');
+	if ($mysql->connect_error) {
+		fwrite($stderr, "\n" . 'MySQL Connection Error: (' . $mysql->connect_errno . ') ' . $mysql->connect_error . "\n");
+		--$maxTries;
+		if ($maxTries <= 0) {
+			exit(1);
+		}
+		sleep(3);
+	}
+} while ($mysql->connect_error);
+if (!$mysql->query('CREATE DATABASE IF NOT EXISTS `' . $mysql->real_escape_string($dbName) . '`')) {
+	fwrite($stderr, "\n" . 'MySQL "CREATE DATABASE" Error: ' . $mysql->error . "\n");
+	$mysql->close();
+	exit(1);
+}
+$mysql->close();
+EOPHP
+
+# Generate self-signed SSL certificate.
+if [ ! -d "/etc/ssl/${WP_DOMAIN}" ]; then
+    echo "INFO: making certs directory"
+    mkdir -p /etc/ssl/${WP_DOMAIN}
+fi
+openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes -subj '/CN='${WP_DOMAIN}''
+mv cert.pem /etc/ssl/${WP_DOMAIN}/fullchain.pem
+mv key.pem /etc/ssl/${WP_DOMAIN}/privkey.pem
+
 cd $WP_ROOT_DIR
 
 # Download WordPress into the same directory via both Git and SVN.
@@ -44,33 +81,5 @@ if ! wp core is-installed; then
 	wp rewrite structure '/%year%/%monthnum%/%day%/%postname%/'
 fi
 cd $current_dir
-
-# Create database if it does not exist yet
-TERM=dumb php -- <<'EOPHP'
-<?php
-$stderr = fopen('php://stderr', 'w');
-$host = 'mysql';
-$user = 'root';
-$pass = 'wordpress';
-$dbName = 'wordpress';
-$maxTries = 10;
-do {
-	$mysql = new mysqli($host, $user, $pass, '');
-	if ($mysql->connect_error) {
-		fwrite($stderr, "\n" . 'MySQL Connection Error: (' . $mysql->connect_errno . ') ' . $mysql->connect_error . "\n");
-		--$maxTries;
-		if ($maxTries <= 0) {
-			exit(1);
-		}
-		sleep(3);
-	}
-} while ($mysql->connect_error);
-if (!$mysql->query('CREATE DATABASE IF NOT EXISTS `' . $mysql->real_escape_string($dbName) . '`')) {
-	fwrite($stderr, "\n" . 'MySQL "CREATE DATABASE" Error: ' . $mysql->error . "\n");
-	$mysql->close();
-	exit(1);
-}
-$mysql->close();
-EOPHP
 
 exec "$@"

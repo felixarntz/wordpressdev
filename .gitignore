@@ -15,6 +15,9 @@ public
 wp-cli.yml
 !config/wp-cli.yml
 
+config/ssl/certs
+config/mysql/data
+
 [Tt]humbs.db
 [Dd]esktop.ini
 *.DS_store

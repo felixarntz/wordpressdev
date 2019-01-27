@@ -32,10 +32,10 @@ function _wordpressdev_detect_core_path_relative() {
 	}
 
 	// Try reading core path from 'wp-cli.yml'.
-	if ( function_exists( 'yaml_parse_file' ) && file_exists( dirname( dirname( __FILE__ ) ) . '/wp-cli.yml' ) ) {
-		$yaml = yaml_parse_file( dirname( dirname( __FILE__ ) ) . '/wp-cli.yml' );
+	if ( function_exists( 'yaml_parse_file' ) && file_exists( dirname( __FILE__ ) . '/wp-cli.yml' ) ) {
+		$yaml = yaml_parse_file( dirname( __FILE__ ) . '/wp-cli.yml' );
 		if ( is_array( $yaml ) && ! empty( $yaml['path'] ) ) {
-			return str_replace( 'public/', '', trim( $yaml['path'], '/' ) );
+			return trim( $yaml['path'], '/' );
 		}
 	}
 
@@ -48,9 +48,9 @@ function _wordpressdev_detect_core_path_relative() {
  *
  * If the 'WP_HOME' constant is already defined, the function simply returns its value. Otherwise it
  * relies on the $current_blog global if in multisite, or the 'HTTP_HOST' server variable, or the
- * domain defined by the Lando environment.
+ * domain defined by the environment.
  *
- * If all else fails, the function falls back to using the 'https://wordpressdev.lndo.site' URL.
+ * If all else fails, the function falls back to using the 'https://wp.test' URL.
  *
  * @access private
  *
@@ -74,13 +74,13 @@ function _wordpressdev_detect_home_url() {
 		return 'https://' . strtolower( stripslashes( $_SERVER['HTTP_HOST'] ) );
 	}
 
-	// Use the domain defined by the Lando environment.
-	if ( false !== getenv( 'LANDO_APP_NAME' ) && false !== getenv( 'LANDO_DOMAIN' ) ) {
-		return 'https://' . getenv( 'LANDO_APP_NAME' ) . '.' . getenv( 'LANDO_DOMAIN' );
+	// Use the domain defined by the environment.
+	if ( false !== getenv( 'WP_DOMAIN' ) ) {
+		return 'https://' . getenv( 'WP_DOMAIN' );
 	}
 
-	// Fall back to a hard-coded 'https://wordpressdev.lndo.site' as last resort.
-	return 'https://wordpressdev.lndo.site';
+	// Fall back to a hard-coded 'https://wp.test' as last resort.
+	return 'https://wp.test';
 }
 
 /**

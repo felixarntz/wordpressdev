@@ -1,0 +1,38 @@
+version: '1.0'
+services:
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./config/wordpress:/etc/wordpress
+      - ./config/nginx:/etc/nginx/conf.d
+      - ./public:/var/www/html
+      - ./config/certs:/etc/letsencrypt
+      - ./certs-data:/data/letsencrypt
+    env_file:
+      - config/.env
+      - .env
+    links:
+      - wordpress
+
+  mysql:
+    image: mariadb
+    container_name: mysql
+    volumes:
+      - ./mysql:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=wordpress
+
+  wordpress:
+    build: .
+    container_name: wordpress
+    volumes:
+      - ./public:/var/www/html
+    env_file:
+      - config/.env
+      - .env
+    links:
+      - mysql
